@@ -29,6 +29,7 @@ const SIDEBAR_ITEMS = [
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const CSS = `
+@media (max-width: 1023px) { #myduSidebar { display: none !important; } }
 #myduSidebar {
   position: fixed; left: 0; top: 0; bottom: 0; width: 236px; z-index: 9500;
   background: rgba(18,20,24,.98); color: #e8eaee;
@@ -55,9 +56,10 @@ const CSS = `
 #myduSidebar .mydu-badge { margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,.09); color: rgba(232,234,238,.6) }
 
 @media (min-width: 1024px) {
-  body:has(#myduSidebar) > #app > [class*="AppShell-root"] { padding-left: 236px !important; }
-  body:has(#myduSidebar) .mydu-bottombar, body:has(#myduSidebar) [class*="bottomBar"] { display: none !important; }
+  html.mydu-on > body > #app > [class*="AppShell-root"] { padding-left: 236px !important; }
+  html.mydu-on [class*="bottomBar"], html.mydu-on .mydu-bottombar { display: none !important; }
 }
+.mydu-native-hidden { display: none !important; }
 
 /* ---- weekly table ---- */
 #myduWeekTableWrap { padding: 18px 16px 40px; font-family: Roboto, Inter, system-ui, sans-serif; }
@@ -87,7 +89,9 @@ const HOST_MYDU = location.hostname === "my-du.astanait.edu.kz";
 const HOST_LEARN = location.hostname === "learn.astanait.edu.kz";
 
 function injectSidebar() {
-  if (!HOST_MYDU || document.getElementById("myduSidebar")) return;
+  if (!HOST_MYDU) return;
+  document.documentElement.classList.add("mydu-on");
+  if (document.getElementById("myduSidebar")) return;
   const sb = document.createElement("div");
   sb.id = "myduSidebar";
   sb.innerHTML = `
@@ -191,9 +195,10 @@ async function buildWeekTable() {
       wrap.id = "myduWeekTableWrap";
       wrap.innerHTML = `<h3>Week ${data.weekNumber || weekNum} <label class="mydu-hide-native"><input type="checkbox" checked style="accent-color:#5a78ff" id="myduHideNative"> hide day cards</label></h3>` +
         html + `<div class="mydu-meta" style="margin-top:8px;font-size:11px;color:var(--mantine-color-dimmed,#888)">built by extension</div>`;
-      // встраиваем после шапки выбора дня
-      const anchor = document.querySelector("main .flex-1.px-3\\.5") || document.querySelector("#app main");
-      if (anchor) anchor.appendChild(wrap); else document.body.appendChild(wrap);
+      // встраиваем вместо нативных секций дня
+      const root = document.querySelector("#app main .flex.flex-col.min-h-svh") || document.querySelector("#app main");
+      if (root) root.appendChild(wrap); else document.body.appendChild(wrap);
+      hideNativeScheduleCards(wrap.querySelector("#myduHideNative") ? true : false);
       const chk = wrap.querySelector("#myduHideNative");
       chk.addEventListener("change", () => hideNativeScheduleCards(chk.checked));
       hideNativeScheduleCards(chk.checked);
@@ -204,9 +209,10 @@ async function buildWeekTable() {
     }
 
     function hideNativeScheduleCards(hide) {
-      // родной блок: заголовок дня (Monday/Today/N classes) + список карточек
-      const inner = document.querySelector("#app main .flex-1.flex-col.px-3\\.5 > div");
-      if (inner) inner.style.display = hide ? "none" : "";
+      const root = document.querySelector("#app main .flex.flex-col.min-h-svh") || document.querySelector("#app main");
+      if (!root) return;
+      const secs = [...root.children].filter(el => el.id !== "myduWeekTableWrap");
+      for (const el of secs) el.classList.toggle("mydu-native-hidden", hide);
     }
   } catch (e) { /* jsx failed */ }
 }
