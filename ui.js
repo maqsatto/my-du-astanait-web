@@ -215,7 +215,7 @@ async function buildWeekTable() {
     if (!wrap) {
       wrap = document.createElement("div");
       wrap.id = "myduWeekTableWrap";
-      wrap.innerHTML = `<h3>Week ${data.weekNumber || weekNum} <label class="mydu-hide-native"><input type="checkbox" checked style="accent-color:#5a78ff" id="myduHideNative"> hide day cards</label></h3>` +
+      wrap.innerHTML = `<h3>Week ${data.weekNumber || weekNum}</h3>` +
         html + `<div class="mydu-meta" style="margin-top:8px;font-size:11px;color:var(--mantine-color-dimmed,#888)">built by extension</div>`;
       // встраиваем вместо нативных секций дня (после монтирования React)
       const place = async () => {
@@ -226,8 +226,6 @@ async function buildWeekTable() {
         }
       };
       place().then(() => hideNativeScheduleCards(true));
-      const chk = wrap.querySelector("#myduHideNative");
-      chk.addEventListener("change", () => hideNativeScheduleCards(chk.checked));
     } else {
       const t = wrap.querySelector("#myduWeekTable");
       if (t) t.outerHTML = html;
