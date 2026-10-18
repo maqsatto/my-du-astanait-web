@@ -123,6 +123,26 @@ function highlightActive(sb) {
 }
 
 /* ---------------- Weekly schedule table ---------------- */
+const RANGE_START = 12 * 60;       // 12:00
+const RANGE_END = 19 * 60 + 50;    // 19:50
+
+function startMinutes(title) {
+  // "15:00–15:50" -> 900
+  const m = String(title || "").match(/(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10), mm = parseInt(m[2], 10);
+  return h * 60 + mm;
+}
+
+// 1) урок "online", ведущий в learn.astanait -> фактически не идём: скрыть
+// 2) вне окна 12:00–19:50 -> убрать
+function visibleLesson(it) {
+  if (it.online && it.link && String(it.link).includes("learn.astanait.edu.kz")) return false;
+  const mm = startMinutes(it.classTime && it.classTime.title);
+  if (mm == null) return false;
+  return mm >= RANGE_START && mm <= RANGE_END;
+}
+
 async function buildWeekTable() {
   if (!HOST_MYDU || !location.pathname.startsWith("/schedule")) return;
   let wrap = document.getElementById("myduWeekTableWrap");
@@ -160,12 +180,14 @@ async function buildWeekTable() {
       days[d.id] = days[d.id] || { name: d.name, rows: [] };
       for (const it of slot.items || []) {
         const t = it.classTime || {};
+        if (!visibleLesson(it)) continue;
         timesMap.set(t.title, { shift: t.shiftNumber || 0, order: t.orderNumber || 0 });
-        if (it.subjectName || it.online) days[d.id].rows.push({ ...it, ct: t.title });
+        days[d.id].rows.push({ ...it, ct: t.title });
       }
     }
     const times = [...timesMap.entries()]
       .map(([title, o]) => ({ title, ...o }))
+      .filter(x => { const mm = startMinutes(x.title); return mm != null && mm >= RANGE_START && mm <= RANGE_END; })
       .sort((a, b) => a.shift - b.shift || a.order - b.order);
 
     const todayName = DAY_NAMES[(new Date().getDay() + 6) % 7];
