@@ -195,13 +195,17 @@ async function buildWeekTable() {
       wrap.id = "myduWeekTableWrap";
       wrap.innerHTML = `<h3>Week ${data.weekNumber || weekNum} <label class="mydu-hide-native"><input type="checkbox" checked style="accent-color:#5a78ff" id="myduHideNative"> hide day cards</label></h3>` +
         html + `<div class="mydu-meta" style="margin-top:8px;font-size:11px;color:var(--mantine-color-dimmed,#888)">built by extension</div>`;
-      // встраиваем вместо нативных секций дня
-      const root = document.querySelector("#app main .flex.flex-col.min-h-svh") || document.querySelector("#app main");
-      if (root) root.appendChild(wrap); else document.body.appendChild(wrap);
-      hideNativeScheduleCards(wrap.querySelector("#myduHideNative") ? true : false);
+      // встраиваем вместо нативных секций дня (после монтирования React)
+      const place = async () => {
+        for (let i = 0; i < 20; i++) {
+          const root = document.querySelector("#app main .flex.flex-col.min-h-svh") || document.querySelector("#app main");
+          if (root && wrap.parentElement !== root) { root.appendChild(wrap); break; }
+          await new Promise(r => setTimeout(r, 150));
+        }
+      };
+      place().then(() => hideNativeScheduleCards(true));
       const chk = wrap.querySelector("#myduHideNative");
       chk.addEventListener("change", () => hideNativeScheduleCards(chk.checked));
-      hideNativeScheduleCards(chk.checked);
     } else {
       const t = wrap.querySelector("#myduWeekTable");
       if (t) t.outerHTML = html;
