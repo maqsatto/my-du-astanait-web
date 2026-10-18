@@ -188,7 +188,7 @@ async function buildWeekTable() {
     const times = [...timesMap.entries()]
       .map(([title, o]) => ({ title, ...o }))
       .filter(x => { const mm = startMinutes(x.title); return mm != null && mm >= RANGE_START && mm <= RANGE_END; })
-      .sort((a, b) => a.shift - b.shift || a.order - b.order);
+      .sort((a, b) => (startMinutes(a.title) ?? 0) - (startMinutes(b.title) ?? 0));
 
     const todayName = DAY_NAMES[(new Date().getDay() + 6) % 7];
 
