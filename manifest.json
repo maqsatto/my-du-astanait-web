@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "My DU Web Unlock",
+  "version": "1.0.0",
+  "description": "Unlocks web access to My DU (astanait.edu.kz) by emulating the mobile app environment.",
+  "content_scripts": [
+    {
+      "matches": ["*://my-du.astanait.edu.kz/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["main.js"],
+      "matches": ["*://my-du.astanait.edu.kz/*"]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "mydu-unlock@astanait.local",
+      "strict_min_version": "115.0"
+    }
+  }
+}
